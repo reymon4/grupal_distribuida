@@ -37,6 +37,11 @@ services:
       --entryPoints.http.address=":80"
       --metrics.prometheus=true
       --metrics.prometheus.entryPoint=metrics
+      --tracing=true
+      --tracing.addinternals=false
+      --tracing.otlp=true
+      --tracing.otlp.http=true
+      --tracing.otlp.http.endpoint=http://jaeger:4318
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
@@ -46,6 +51,18 @@ services:
       - 80
     depends_on:
       - consul
+  jaeger:
+    image: jaegertracing/jaeger:2.2.0
+    ports:
+      - "16686:16686"  #UI
+      - "4317:4317"   #GRPC
+      - "4318:4318"   #HTTP
+    expose:
+      - 16686
+      - 4317
+      - 4318
+    depends_on:
+      - proxy
   authors:
     image: reymon4/app_authors_grupal:latest
     labels:
@@ -62,6 +79,7 @@ services:
       SERVER_PORT: 8088
       SPRING.CLOUD.CONSUL.HOST: consul
       SPRING.CLOUD.CONSUL.PORT: 8500
+      MANAGEMENT.OTLP.TRACING.ENDPOINT: http://jaeger:4317
     depends_on:
       - dbserver
       - consul
@@ -84,7 +102,7 @@ services:
       SERVER_PORT: 8089
       SPRING.CLOUD.CONSUL.HOST: consul
       SPRING.CLOUD.CONSUL.PORT: 8500
-
+      MANAGEMENT.OTLP.TRACING.ENDPOINT: http://jaeger:4317
     depends_on:
       - dbserver
       - consul

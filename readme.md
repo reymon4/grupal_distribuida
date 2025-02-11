@@ -34,6 +34,13 @@ docker ps
 #### 4. Acceder a traefik y consul para verificar que se han levantado todo correctamente
 ##### Traefix
 frontend: http://localhost:8080
+##### Prometheus (Url para grafana)
+frontend: http://prometheus:9090
+##### Grafana
+frontend: http://localhost:3000
+Dashboard code: 17346 - Traefik Dashboard
+##### Jaeger
+frontend: http://localhost:16686
 ##### Consul
 frontend: http://localhost:8500
 ##### Books

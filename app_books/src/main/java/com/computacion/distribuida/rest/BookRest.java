@@ -1,6 +1,7 @@
 package com.computacion.distribuida.rest;
 
 import com.computacion.distribuida.db.Book;
+import com.computacion.distribuida.dto.AuthorDTO;
 import com.computacion.distribuida.dto.BookDTO;
 import com.computacion.distribuida.repo.BookRepository;
 import jakarta.transaction.Transactional;
@@ -37,15 +38,18 @@ public class BookRest {
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
         AuthorRestClient service = factory.createClient(AuthorRestClient.class);
 
-        //version-4-->MP Client Automatica
         return repository.findAll()
                 .stream()
-                .map(book->{
+                .map(book -> {
                     System.out.println("Buscando author con id= " + book.getAuthorId());
-
-                    var author = service.findById(book.getAuthorId());
-                    System.out.println("Author encontrado: " + author.toString());
-
+                    AuthorDTO author;
+                    try {
+                        author = service.findById(book.getAuthorId());
+                        System.out.println("Author encontrado: " + author.toString());
+                    } catch (Exception e) {
+                        author = service.findByIdFallback(book.getAuthorId(), e);
+                        System.out.println("Fallback author: " + author.toString());
+                    }
                     var dto = new BookDTO( );
 
                     dto.setId(book.getId());
