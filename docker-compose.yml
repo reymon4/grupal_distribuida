@@ -1,4 +1,3 @@
-version: '3.3'
 services:
   dbserver:
     image: postgres:17.2-alpine3.21
@@ -32,6 +31,14 @@ services:
       --providers.consulCatalog.exposedByDefault=false
       --providers.consulCatalog.refreshInterval=5s
       --providers.consulCatalog.endpoint.address=consul:8500
+      --providers.docker
+      --providers.docker.exposedByDefault=false
+      --entryPoints.metrics.address=":8082"
+      --entryPoints.http.address=":80"
+      --metrics.prometheus=true
+      --metrics.prometheus.entryPoint=metrics
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8080:8080"
       - "80:80"
@@ -41,29 +48,73 @@ services:
       - consul
   authors:
     image: reymon4/app_authors_grupal:latest
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.router-authors.rule=Host(`/authors-t`)"
+        - "traefik.http.routers.router-authors.middlewares=middleware-authors-t"
+        - "traefik.http.middlewares.middleware-authors-t.stripprefix.prefixes=/authors-t"
+    expose:
+      - 8088
     environment:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_DATASOURCE_URL: jdbc:postgresql://dbserver:5432/distribuida
-      SERVER_PORT: 8080
+      SERVER_PORT: 8088
+      SPRING.CLOUD.CONSUL.HOST: consul
+      SPRING.CLOUD.CONSUL.PORT: 8500
+    depends_on:
+      - dbserver
+      - consul
+    deploy:
+      replicas: 2
+  books:
+    image: reymon4/app_books_grupal:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.router-books.rule=Host(`/books-t`)"
+      - "traefik.http.routers.router-books.middlewares=middleware-books-t"
+      - "traefik.http.middlewares.middleware-books-t.stripprefix.prefixes=/books-t"
+    expose:
+        - 8089
+    environment:
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_URL: jdbc:postgresql://dbserver:5432/distribuida
+      SERVER_PORT: 8089
       SPRING.CLOUD.CONSUL.HOST: consul
       SPRING.CLOUD.CONSUL.PORT: 8500
 
     depends_on:
       - dbserver
       - consul
-    deploy:
-      replicas: 1
-  books:
-    image: reymon4/app_books_grupal:latest
-    environment:
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: root
-      SPRING_DATASOURCE_URL: jdbc:postgresql://dbserver:5432/distribuida
-      SERVER_PORT: 8080
-      SPRING.CLOUD.CONSUL.HOST: consul
-      SPRING.CLOUD.CONSUL.PORT: 8500
-    depends_on:
-      - dbserver
-      - consul
       - authors
+    deploy:
+        replicas: 3
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    expose:
+      - 9090
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    expose:
+      - 3000
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_URI: "dbserver:5432/distribuida?sslmode=disable"
+      DATA_SOURCE_USER: postgres
+      DATA_SOURCE_PASS: root
+    expose:
+      - 9187
+
+
+
+
