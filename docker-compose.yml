@@ -79,10 +79,11 @@ services:
       SERVER_PORT: 8088
       SPRING.CLOUD.CONSUL.HOST: consul
       SPRING.CLOUD.CONSUL.PORT: 8500
-      MANAGEMENT.OTLP.TRACING.ENDPOINT: http://jaeger:4317
+
     depends_on:
       - dbserver
       - consul
+      - jaeger
     deploy:
       replicas: 2
   books:
@@ -102,11 +103,12 @@ services:
       SERVER_PORT: 8089
       SPRING.CLOUD.CONSUL.HOST: consul
       SPRING.CLOUD.CONSUL.PORT: 8500
-      MANAGEMENT.OTLP.TRACING.ENDPOINT: http://jaeger:4317
+
     depends_on:
       - dbserver
       - consul
       - authors
+      - jaeger
     deploy:
         replicas: 3
   prometheus:
