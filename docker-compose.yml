@@ -50,7 +50,7 @@ services:
     image: reymon4/app_authors_grupal:latest
     labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.router-authors.rule=Host(`/authors-t`)"
+        - "traefik.http.routers.router-authors.rule=PathPrefix(`/authors-t`)"
         - "traefik.http.routers.router-authors.middlewares=middleware-authors-t"
         - "traefik.http.middlewares.middleware-authors-t.stripprefix.prefixes=/authors-t"
     expose:
@@ -71,9 +71,10 @@ services:
     image: reymon4/app_books_grupal:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.router-books.rule=Host(`/books-t`)"
+      - "traefik.http.routers.router-books.rule=PathPrefix(`/books-t`)"
       - "traefik.http.routers.router-books.middlewares=middleware-books-t"
       - "traefik.http.middlewares.middleware-books-t.stripprefix.prefixes=/books-t"
+
     expose:
         - 8089
     environment:
